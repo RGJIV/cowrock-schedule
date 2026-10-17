@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Crew Schedule</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<style>
+:root {
+  --navy: #1a2b3c;
+  --blue: #1d5b94;
+  --bg: #f5f6f4;
+  --card: #ffffff;
+  --text: #1a2b3c;
+  --muted: #5d6b78;
+  --line: #e2e5e8;
+  --grid: #eef0f2;
+  --today: #c2410c;
+  --c1: #1d5b94; --c2: #4f7d5c; --c3: #b07a2a; --c4: #8a4f6d; --c5: #3f7f86; --c6: #6b6f9e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181f; --card: #18222c; --text: #e8edf2; --muted: #98a6b3;
+    --line: #2a3742; --grid: #1f2a34; --today: #f08a4b;
+    --c1: #5b9bd5; --c2: #7fb08b; --c3: #d6a457; --c4: #c486a6; --c5: #6fb3ba; --c6: #9ea2d6;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
+
+header { display: flex; align-items: center; gap: 14px; padding: 22px 0 18px; }
+header img { width: 52px; height: 52px; border-radius: 50%; background: #fff; flex: none; }
+.brand { font: 600 12px/1 "Times New Roman", serif; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 28px/1.15 "Times New Roman", Georgia, serif; margin-top: 4px; }
+h2 { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 26px 0 10px; }
+
+/* This week */
+.now { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.card {
+  display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px 14px 14px 0; min-height: 72px; transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--blue); }
+.card:active { transform: scale(.99); }
+.card .swatch { width: 5px; align-self: stretch; border-radius: 0 4px 4px 0; flex: none; }
+.card .txt { flex: 1; min-width: 0; }
+.card .nm { font-weight: 650; font-size: 18px; }
+.card .ar { color: var(--muted); font-size: 14px; }
+.card .dt { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.go { flex: none; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--blue); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .go { color: var(--c1); } }
+.go svg { width: 18px; height: 18px; }
+.empty { color: var(--muted); font-style: italic; }
+
+/* Gantt */
+.gantt { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.grid { display: grid; position: relative; min-width: 100%; }
+.cell-h { font-size: 12px; color: var(--muted); padding: 10px 0 8px 6px; border-left: 1px solid var(--grid); white-space: nowrap; }
+.cell-h b { display: block; color: var(--text); font-size: 12px; font-weight: 650; }
+.corner, .label {
+  position: sticky; left: 0; z-index: 2; background: var(--card); border-right: 1px solid var(--line);
+}
+.corner { font-size: 12px; color: var(--muted); padding: 10px 12px 8px; }
+.label { padding: 10px 12px; border-top: 1px solid var(--grid); display: block; }
+.label .nm { font-weight: 650; font-size: 15px; display: block; }
+.label .ar { font-size: 12.5px; color: var(--muted); display: block; }
+.lane { position: relative; border-top: 1px solid var(--grid); min-height: 56px; display: block; }
+.bar {
+  position: absolute; top: 13px; bottom: 13px; border-radius: 6px; display: flex; align-items: center;
+  padding: 0 8px; font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden;
+}
+.bar.tent { color: var(--text); border: 1.5px dashed; background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255,255,255,.35) 6px 12px); }
+.side { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.wk { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--grid); pointer-events: none; }
+.today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--today); z-index: 1; pointer-events: none; }
+.today span { position: absolute; top: 2px; left: 4px; font-size: 10.5px; font-weight: 700; color: var(--today); letter-spacing: .04em; }
+a.row:hover .label .nm, a.row:hover + * { text-decoration: underline; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); margin-top: 12px; }
+.legend i { display: inline-block; width: 26px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+.legend .t { border: 1.5px dashed var(--c1); background: color-mix(in srgb, var(--c1) 30%, transparent); }
+.legend .f { background: var(--c1); }
+footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="">
+    <div>
+      <div class="brand">Cow Rock Construction</div>
+      <h1>Crew Schedule</h1>
+    </div>
+  </header>
+
+  <h2 id="now-h">This week</h2>
+  <div class="now" id="now"></div>
+
+  <h2>Schedule</h2>
+  <div class="gantt"><div class="scroll"><div class="grid" id="grid"></div></div></div>
+  <div class="legend">
+    <span><i class="f"></i>Scheduled</span>
+    <span><i class="t"></i>Dates not final</span>
+    <span>Tap any job for driving directions</span>
+  </div>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DAY = 86400000;
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const COLORS = ["--c1","--c2","--c3","--c4","--c5","--c6"];
+const pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
+const d = s => { const [y, m, dd] = s.split("-").map(Number); return new Date(y, m - 1, dd); };
+const fmt = t => `${MON[t.getMonth()]} ${t.getDate()}`;
+const monday = t => { const x = new Date(t.getFullYear(), t.getMonth(), t.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const days = (a, b) => Math.round((b - a) / DAY);
+const maps = j => `https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lon}`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const range = j => `${fmt(d(j.start))} – ${fmt(d(j.end))}`;
+// Same job, same color every day (FNV-1a of the id; seed 125 keeps the Oct 2026 jobs all different).
+const colorIndex = s => ([...s].reduce((x, c) => Math.imul(x ^ c.charCodeAt(0), 16777619) >>> 0, 125) >>> 16) % COLORS.length;
+
+fetch("schedule.json", {cache: "no-store"}).then(r => r.json()).then(render).catch(() => {
+  document.getElementById("now").innerHTML = '<p class="empty">Schedule could not be loaded. Pull down to refresh.</p>';
+});
+
+function render(data) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const wk0 = monday(today), wk1 = new Date(+wk0 + 6 * DAY);
+  const jobs = data.jobs
+    .map(j => ({...j, color: `var(${COLORS[colorIndex(j.id || j.name)]})`}))
+    .filter(j => d(j.end) >= today)  // finished jobs come off the page (client privacy, Richard Oct 14, 2026)
+    .sort((a, b) => d(a.start) - d(b.start));
+
+  // This week
+  const now = jobs.filter(j => (j.bars && j.bars.length ? j.bars : [j]).some(b => d(b.start) <= wk1 && d(b.end) >= today));
+  document.getElementById("now-h").textContent = `This week · ${fmt(wk0)} – ${fmt(new Date(+wk0 + 4 * DAY))}`;
+  document.getElementById("now").innerHTML = now.length ? now.map(j => `
+    <a class="card" href="${maps(j)}" target="_blank" rel="noopener">
+      <span class="swatch" style="background:${j.color}"></span>
+      <span class="txt"><span class="nm">${esc(j.name)}</span><br><span class="ar">${esc(j.area)}</span>
+        <div class="dt">${range(j)}</div></span>
+      <span class="go">${pin}Directions</span>
+    </a>`).join("") : '<p class="empty">No jobs scheduled this week.</p>';
+
+  // Gantt: whole weeks from this Monday to the last job's end
+  const last = jobs.reduce((m, j) => d(j.end) > m ? d(j.end) : m, wk1);
+  const weeks = Math.max(4, Math.ceil((days(wk0, last) + 1) / 7));
+  const span = weeks * 7;
+  const W = 64;  // px per week
+  const grid = document.getElementById("grid");
+  grid.style.gridTemplateColumns = `minmax(128px, 168px) repeat(${weeks}, minmax(${W}px, 1fr))`;
+
+  let h = '<div class="corner">Week of</div>';
+  for (let w = 0; w < weeks; w++) {
+    const t = new Date(+wk0 + w * 7 * DAY);
+    h += `<div class="cell-h"><b>${fmt(t)}</b></div>`;
+  }
+  const pct = n => (n / span * 100).toFixed(3) + "%";
+  const lines = Array.from({length: weeks}, (_, w) => w ? `<span class="wk" style="left:${pct(w * 7)}"></span>` : "").join("");
+  const todayLine = `<span class="today" style="left:${pct(days(wk0, today) + .5)}"></span>`;
+  jobs.forEach((j, i) => {
+    // a job can have several periods (bars); older files have one start/end per job
+    const bars = (j.bars && j.bars.length ? j.bars : [j]).filter(b => d(b.end) >= today).map(b => {
+      const s = Math.max(0, days(wk0, d(b.start)));
+      const e = days(wk0, d(b.end)) + 1;
+      const style = b.tentative
+        ? `left:${pct(s)};width:${pct(e - s)};border-color:${j.color};background-color:color-mix(in srgb, ${j.color} 28%, transparent)`
+        : `left:${pct(s)};width:${pct(e - s)};background:${j.color}`;
+      return `<span class="bar${b.tentative ? " tent" : ""}" style="${style}">${e - s >= 12 ? range(b) : ""}</span>` +
+        (e - s < 12 ? `<span class="side" style="left:calc(${pct(e)} + 6px)">${range(b)}</span>` : "");
+    }).join("");
+    h += `<a class="label" href="${maps(j)}" target="_blank" rel="noopener"><span class="nm">${esc(j.name)}</span><span class="ar">${esc(j.area)}</span></a>
+      <a class="lane" href="${maps(j)}" target="_blank" rel="noopener" style="grid-column: 2 / span ${weeks}" title="${esc(j.name)}: ${range(j)}">
+        ${lines}${i === 0 ? todayLine.replace("></span>", "><span>TODAY</span></span>") : todayLine}
+        ${bars}
+      </a>`;
+  });
+  grid.innerHTML = h;
+
+  const u = data.updated ? d(data.updated) : null;
+  document.getElementById("foot").textContent = u ? `Updated ${fmt(u)}, ${u.getFullYear()}` : "";
+}
+</script>
+</body>
+</html>
